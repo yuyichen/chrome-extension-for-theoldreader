@@ -21,7 +21,7 @@ const services: Partial<
 
 for (const key in api) {
   services[key] = (config?: AxiosRequestConfig) =>
-    axios.get(key, { baseURL: HOST, ...config });
+    axios.request({ url: api[key], baseURL: HOST, method: "get", ...config });
 }
 
 export default services;

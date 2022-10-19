@@ -8,7 +8,14 @@ import "../index.less";
 const FeedTree = () => {
   const {
     homeState: { feeds = [], feedsLoading },
+    setHomeState,
   } = useContext(HomeContext);
+
+  const selectFeed = (selectedKeys, e) => {
+    setHomeState({
+      selectedFeed: e?.node?.['data-ref']
+    })
+  }
 
   const renderTreeNode = (arr: any[]) => {
     return arr.map((x) => {
@@ -16,6 +23,7 @@ const FeedTree = () => {
         <Tree.TreeNode
           key={x.id}
           className="overflow-hidden"
+          data-ref={x}
           icon={
             x.icon ? (
               <img src={`${SITE_FAVICON_HOST}${x.icon}`} />
@@ -44,11 +52,11 @@ const FeedTree = () => {
   return (
     <Spin spinning={feedsLoading}>
       {feeds.length > 0 ? (
-        <Tree blockNode showIcon className="feeds-tree">
+        <Tree blockNode showIcon className="feeds-tree" onSelect={selectFeed}>
           {renderTreeNode(feeds)}
         </Tree>
       ) : (
-        <Empty />
+        <Empty style={{ marginTop: 100 }} />
       )}
     </Spin>
   );

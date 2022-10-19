@@ -3,18 +3,33 @@ import { ConfigProvider, Layout } from "antd";
 import zh_CN from "antd/es/locale/zh_CN";
 import services from "../../services";
 import FeedTree from "./components/FeedTree";
+import PostList from "./components/PostList";
 
-export const HomeContext = createContext<any>(null);
-
-const Home = () => {
-  const [homeState, setFullHomeState] = useState({
+const initialState = {
+  homeState: {
     feeds: [],
     feedsLoading: false,
-  });
+    selectedFeed: undefined,
+    feedPosts: [],
+    feedPostsLoading: false,
+    selectedPost: undefined,
+  },
+  setHomeState: (arg?: any) => undefined,
+  getFeeds: (arg?: any) => undefined,
+};
 
-  const setHomeState = (particalState: any) => {
+export const HomeContext = createContext(initialState);
+
+const Home = () => {
+  const [homeState, setFullHomeState] = useState<typeof initialState.homeState>(
+    initialState.homeState
+  );
+
+  const setHomeState = (
+    particalState: Partial<typeof initialState.homeState>
+  ) => {
     setFullHomeState({
-      ...homeState,
+      ...(homeState as typeof initialState.homeState),
       ...particalState,
     });
   };
@@ -61,8 +76,9 @@ const Home = () => {
           >
             <FeedTree />
           </Layout.Sider>
-          <Layout.Content>
+          <Layout.Content className="flex flex-col">
             <Layout.Header></Layout.Header>
+            <PostList/>
           </Layout.Content>
         </Layout>
       </HomeContext.Provider>
