@@ -15,6 +15,11 @@ const FeedTree = () => {
     setHomeState({
       selectedFeed: e?.node?.["data-ref"],
     });
+    document.querySelectorAll("#scrollableDiv")[0].scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
   };
 
   const renderTreeNode = (arr: any[]) => {
