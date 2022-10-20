@@ -73,11 +73,11 @@ const Home = () => {
             theme="light"
             title="RSS"
             className="overflow-auto"
+            collapsible
           >
             <FeedTree />
           </Layout.Sider>
           <Layout.Content className="flex flex-col">
-            <Layout.Header></Layout.Header>
             <PostList/>
           </Layout.Content>
         </Layout>

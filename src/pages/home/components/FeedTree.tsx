@@ -13,9 +13,9 @@ const FeedTree = () => {
 
   const selectFeed = (selectedKeys, e) => {
     setHomeState({
-      selectedFeed: e?.node?.['data-ref']
-    })
-  }
+      selectedFeed: e?.node?.["data-ref"],
+    });
+  };
 
   const renderTreeNode = (arr: any[]) => {
     return arr.map((x) => {
@@ -52,7 +52,13 @@ const FeedTree = () => {
   return (
     <Spin spinning={feedsLoading}>
       {feeds.length > 0 ? (
-        <Tree blockNode showIcon className="feeds-tree" onSelect={selectFeed}>
+        <Tree
+          blockNode
+          showIcon
+          className="feeds-tree m-2"
+          onSelect={selectFeed}
+          style={{ paddingBottom: 50 }}
+        >
           {renderTreeNode(feeds)}
         </Tree>
       ) : (
