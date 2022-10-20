@@ -1,9 +1,15 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { Drawer } from "antd";
 import { HomeContext } from "../Home";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import services from "@src/services";
 
-const PostDrawer: React.FC = () => {
+interface Props {
+  hasMore: boolean;
+  loadingMore: () => void;
+}
+const PostDrawer: React.FC<Props> = (props) => {
+  const { hasMore, loadingMore } = props
   const {
     homeState: { feedPosts, selectedPost = {} },
     setHomeState,
@@ -20,6 +26,66 @@ const PostDrawer: React.FC = () => {
       behavior: "smooth",
     });
   };
+
+  const maskAsRead = async (signal: AbortSignal) => {
+    const { data } = await services.editTag({
+      method: "post",
+      params: {
+        i: selectedPost.id,
+        a: "user/-/state/com.google/read",
+      },
+      signal,
+    });
+  };
+
+  useEffect(() => {
+    if (selectedPost?.id) {
+      const ac = new AbortController();
+      maskAsRead(ac.signal);
+      return () => {
+        ac.abort();
+      };
+    }
+  }, [selectedPost?.id]);
+
+  useEffect(() => {
+    const keyEvent = (e) => {
+      if (feedPosts.length > 0 && selectedPostIndex > -1) {
+        switch (true) {
+          case e.code === "ArrowRight" &&
+            selectedPostIndex < feedPosts.length - 1:
+            setHomeState({
+              selectedPost: feedPosts[selectedPostIndex + 1],
+            });
+            scrollToTop();
+            break;
+          case e.code === "ArrowLeft" && selectedPostIndex > 0:
+            setHomeState({
+              selectedPost: feedPosts[selectedPostIndex - 1],
+            });
+            scrollToTop();
+            break;
+          case ["ArrowDown", "Space"].includes(e.code):
+            document
+              .querySelectorAll("#postBox")[0]
+              .scrollBy({ top: 400, behavior: "smooth" });
+            break;
+          case ["ArrowUp"].includes(e.code):
+            document
+              .querySelectorAll("#postBox")[0]
+              .scrollBy({ top: -400, behavior: "smooth" });
+            break;
+        }
+      }
+    };
+    document.addEventListener("keydown", keyEvent);
+
+    if (hasMore && selectedPostIndex === feedPosts.length - 2 ) {
+      loadingMore()
+    }
+
+    return () => document.removeEventListener("keydown", keyEvent);
+  }, [feedPosts, selectedPostIndex]);
 
   return (
     <Drawer

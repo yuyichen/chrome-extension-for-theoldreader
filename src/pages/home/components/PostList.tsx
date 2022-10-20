@@ -1,13 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import {
-  List,
-  Spin,
-  Button,
-  Space,
-  Typography,
-  message,
-  Divider,
-} from "antd";
+import { List, Spin, Button, Space, Typography, message, Divider } from "antd";
 import { HomeContext } from "../Home";
 import services from "@src/services";
 import qs from "qs";
@@ -57,12 +49,10 @@ const PostList: React.FC = () => {
     if (Array.isArray(items)) {
       setHomeState({
         feedPosts: c ? feedPosts.concat(items) : items,
-        selectedPost: undefined,
+        // selectedPost: undefined,
       });
       setPageContinuation(continuation);
-      if (items.length === 0) {
-        setHasMore(false);
-      }
+      setHasMore(items?.length > 0);
     }
   };
 
@@ -96,6 +86,7 @@ const PostList: React.FC = () => {
         s: `feed/${selectedFeed?.id}`,
       },
     });
+    console.log(data)
     if (data === "OK") {
       message.success("操作成功");
     }
@@ -106,6 +97,9 @@ const PostList: React.FC = () => {
     if (selectedFeed?.id) {
       const ac = new AbortController();
       getPosts(ac.signal, undefined);
+      setHomeState({
+        selectedPost: undefined,
+      });
       return () => {
         ac.abort();
       };
@@ -143,7 +137,11 @@ const PostList: React.FC = () => {
           }}
           hasMore={feedPosts.length < 10000 && hasMore}
           loader={
-            loading && <div className="text-center"><Spin tip="加载中"/></div>
+            loading && (
+              <div className="text-center">
+                <Spin />
+              </div>
+            )
           }
           endMessage={
             <Divider plain className="p-2">
@@ -176,7 +174,12 @@ const PostList: React.FC = () => {
           />
         </InfiniteScroll>
       </div>
-      <PostDrawer />
+      <PostDrawer
+        hasMore={hasMore}
+        loadingMore={() => {
+          setRefreshKey(refreshKey + 1);
+        }}
+      />
     </div>
   );
 };
