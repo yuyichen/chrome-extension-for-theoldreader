@@ -1,16 +1,22 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
-import { message } from "antd";
+import { message, Modal } from "antd";
 import api from "./api";
 import { HOST } from "../constants";
 
 axios.interceptors.response.use(async (response) => {
-  // if ([200].includes(response.status)) {
-  //   message.error(response.data || "请求出错");
-  //   return Promise.reject(response);
-  // }
   return response;
-}, message.error);
+}, error => {
+  if ([401].includes(error?.response?.status)) {
+    Modal.error({
+      title: "登录已失效",
+      content: "请先登录",
+      onOk: () => {
+        chrome.tabs.create({ url: "https://theoldreader.com/users/sign_in" });
+      }
+    });
+  }
+});
 
 const services: Partial<
   Record<

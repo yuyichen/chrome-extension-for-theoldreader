@@ -16,21 +16,23 @@ const PostList: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(1);
   const [pageContinuation, setPageContinuation] = useState(undefined);
 
-  const getPosts = async (signal: AbortSignal, c:any) => {
+  const getPosts = async (signal: AbortSignal, c: any) => {
     const ac = new AbortController();
-    const {nextPageurl, ...rest} = c || {};
+    const { nextPageurl, ...rest } = c || {};
     setLoading(true);
-    const { data } = await services.feedHtml({
-      url: nextPageurl || `/feeds/${selectedFeed?.id}`,
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      },
-      signal,
-      params: rest,
-    }).finally(() => {
-      setLoading(false);
-    });
+    const { data } = await services
+      .feedHtml({
+        url: nextPageurl || `/feeds/${selectedFeed?.id}`,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        },
+        signal,
+        params: rest,
+      })
+      .finally(() => {
+        setLoading(false);
+      });
     const { csrfToken, items, nextPage } = temme(
       data,
       `[name=csrf-token][content=$csrfToken];
@@ -52,9 +54,13 @@ const PostList: React.FC = () => {
     );
     setHomeState({
       feedPosts: nextPageurl ? feedPosts.concat(items) : items,
-      csrfToken,
       // selectedPost: undefined,
     });
+    if (csrfToken) {
+      setHomeState({
+        csrfToken,
+      });
+    }
     setPageContinuation(nextPage);
     return () => {
       ac.abort();
@@ -63,7 +69,7 @@ const PostList: React.FC = () => {
 
   const refreshPosts = async () => {
     setLoading(true);
-    const { data } = await services
+    const res = await services
       .refresh({
         url: `/feeds/${selectedFeed?.id}/refresh`,
         method: "post",
@@ -79,11 +85,10 @@ const PostList: React.FC = () => {
       .catch((e) => {
         setLoading(false);
       });
-    if (data) {
+    if (res && res.data) {
       setPageContinuation(undefined);
       setRefreshKey(refreshKey + 1);
     }
-    
   };
 
   const markAsAllRead = async () => {
@@ -175,7 +180,13 @@ const PostList: React.FC = () => {
                   }
                 >
                   <List.Item.Meta
-                    title={<Typography.Text className={ item.unread ? '' : 'text-gray-400' }>{item.title}</Typography.Text>}
+                    title={
+                      <Typography.Text
+                        className={item.unread ? "" : "text-gray-400"}
+                      >
+                        {item.title}
+                      </Typography.Text>
+                    }
                   />
                 </List.Item>
               );
