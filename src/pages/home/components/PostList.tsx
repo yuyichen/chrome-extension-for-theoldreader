@@ -18,11 +18,11 @@ const PostList: React.FC = () => {
 
   const getPosts = async (signal: AbortSignal, c: any) => {
     const ac = new AbortController();
-    const { nextPageurl, ...rest } = c || {};
+    const { nextPageUrl, ...rest } = c || {};
     setLoading(true);
     const { data } = await services
       .feedHtml({
-        url: nextPageurl || `/feeds/${selectedFeed?.id}`,
+        url: nextPageUrl || `/feeds/${selectedFeed?.id}`,
         headers: {
           "X-Requested-With": "XMLHttpRequest",
           "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -33,11 +33,11 @@ const PostList: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-    const { csrfToken, items, nextPage } = temme(
+    const { csrfToken: newCsrfToken, items, nextPage } = temme(
       data,
       `[name=csrf-token][content=$csrfToken];
       #endless@nextPage|pack {
-        &[href=$nextPageurl];
+        &[href=$nextPageUrl];
         &[data-last=$last];
         &[data-exclude=$exclude];
         $endless=true;
@@ -53,14 +53,10 @@ const PostList: React.FC = () => {
       }`
     );
     setHomeState({
-      feedPosts: nextPageurl ? feedPosts.concat(items) : items,
+      feedPosts: nextPageUrl ? feedPosts.concat(items) : items,
       // selectedPost: undefined,
+      csrfToken: newCsrfToken || csrfToken,
     });
-    if (csrfToken) {
-      setHomeState({
-        csrfToken,
-      });
-    }
     setPageContinuation(nextPage);
     return () => {
       ac.abort();
@@ -126,6 +122,7 @@ const PostList: React.FC = () => {
     }
   }, [refreshKey]);
 
+
   return (
     <div className="flex-auto flex flex-col container mx-auto overflow-hidden">
       <div className="flex items-center p-2 m-2 bg-white">
@@ -149,7 +146,7 @@ const PostList: React.FC = () => {
           next={() => {
             setRefreshKey(refreshKey + 1);
           }}
-          hasMore={feedPosts.length < 10000 && !!pageContinuation?.nextPageurl}
+          hasMore={feedPosts.length < 10000 && !!pageContinuation?.nextPageUrl}
           loader={
             loading && (
               <div className="text-center">
@@ -195,7 +192,7 @@ const PostList: React.FC = () => {
         </InfiniteScroll>
       </div>
       <PostDrawer
-        hasMore={!!pageContinuation?.nextPageurl}
+        hasMore={!!pageContinuation?.nextPageUrl}
         loadingMore={() => {
           setRefreshKey(refreshKey + 1);
         }}
