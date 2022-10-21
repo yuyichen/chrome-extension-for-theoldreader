@@ -5,55 +5,60 @@ import services from "@src/services";
 import qs from "qs";
 import PostDrawer from "./PostDrawer";
 import InfiniteScroll from "react-infinite-scroll-component";
+import temme from "temme";
 
 const PostList: React.FC = () => {
   const {
-    homeState: { feedPosts, selectedFeed },
+    homeState: { refreshFeedsKey, feedPosts, selectedFeed, csrfToken },
     setHomeState,
   } = useContext(HomeContext);
   const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(1);
   const [pageContinuation, setPageContinuation] = useState(undefined);
-  const [hasMore, setHasMore] = useState(true);
 
-  const getPosts = async (signal: AbortSignal, c?: string) => {
+  const getPosts = async (signal: AbortSignal, c:any) => {
+    const ac = new AbortController();
+    const {nextPageurl, ...rest} = c || {};
     setLoading(true);
-    const {
-      data: { itemRefs: ids, continuation },
-    } = await services
-      .ids({
-        params: {
-          s: `feed/${selectedFeed?.id}`,
-          c,
-        },
-        signal,
-      })
-      .catch((e) => {
-        setLoading(false);
-      });
-    const {
-      data: { items },
-    } = await services
-      .contents({
-        params: {
-          i: ids.map((x) => `tag:google.com,2005:reader/item/${x.id}`),
-        },
-        paramsSerializer: {
-          serialize: (params) => qs.stringify(params, { indices: false }),
-        },
-        signal,
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-    if (Array.isArray(items)) {
-      setHomeState({
-        feedPosts: c ? feedPosts.concat(items) : items,
-        // selectedPost: undefined,
-      });
-      setPageContinuation(continuation);
-      setHasMore(items?.length > 0);
-    }
+    const { data } = await services.feedHtml({
+      url: nextPageurl || `/feeds/${selectedFeed?.id}`,
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      signal,
+      params: rest,
+    }).finally(() => {
+      setLoading(false);
+    });
+    const { csrfToken, items, nextPage } = temme(
+      data,
+      `[name=csrf-token][content=$csrfToken];
+      #endless@nextPage|pack {
+        &[href=$nextPageurl];
+        &[data-last=$last];
+        &[data-exclude=$exclude];
+        $endless=true;
+      };
+      [id^=post]@items {
+        &[data-identifier=$id];
+        &[data-relative=$origin];
+        $unread = false;
+        &.unread{$unread = true};
+        strong{$title};
+        .label[data-time=$time|Number];
+        .content-body{html($content)};
+      }`
+    );
+    setHomeState({
+      feedPosts: nextPageurl ? feedPosts.concat(items) : items,
+      csrfToken,
+      // selectedPost: undefined,
+    });
+    setPageContinuation(nextPage);
+    return () => {
+      ac.abort();
+    };
   };
 
   const refreshPosts = async () => {
@@ -68,6 +73,7 @@ const PostList: React.FC = () => {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
           "X-Requested-With": "XMLHttpRequest",
+          "X-CSRF-Token": csrfToken,
         },
       })
       .catch((e) => {
@@ -77,6 +83,7 @@ const PostList: React.FC = () => {
       setPageContinuation(undefined);
       setRefreshKey(refreshKey + 1);
     }
+    
   };
 
   const markAsAllRead = async () => {
@@ -86,20 +93,18 @@ const PostList: React.FC = () => {
         s: `feed/${selectedFeed?.id}`,
       },
     });
-    console.log(data)
     if (data === "OK") {
       message.success("操作成功");
+      setHomeState({
+        refreshFeedsKey: refreshFeedsKey + 1,
+      });
     }
-    // TODO 刷新未读数
   };
 
   useEffect(() => {
     if (selectedFeed?.id) {
       const ac = new AbortController();
       getPosts(ac.signal, undefined);
-      setHomeState({
-        selectedPost: undefined,
-      });
       return () => {
         ac.abort();
       };
@@ -121,7 +126,11 @@ const PostList: React.FC = () => {
       <div className="flex items-center p-2 m-2 bg-white">
         <h3 className="flex-auto mb-0">{selectedFeed?.title || "-"}</h3>
         <Space>
-          <Button loading={loading} disabled={!selectedFeed}>
+          <Button
+            loading={loading}
+            disabled={!selectedFeed}
+            onClick={refreshPosts}
+          >
             刷新
           </Button>
           <Button disabled={!selectedFeed} onClick={markAsAllRead}>
@@ -135,7 +144,7 @@ const PostList: React.FC = () => {
           next={() => {
             setRefreshKey(refreshKey + 1);
           }}
-          hasMore={feedPosts.length < 10000 && hasMore}
+          hasMore={feedPosts.length < 10000 && !!pageContinuation?.nextPageurl}
           loader={
             loading && (
               <div className="text-center">
@@ -153,7 +162,7 @@ const PostList: React.FC = () => {
           <List
             className="m-2 p-2 bg-white"
             dataSource={feedPosts}
-            // loading={loading}
+            loading={loading}
             itemLayout="horizontal"
             renderItem={(item, index) => {
               return (
@@ -166,7 +175,7 @@ const PostList: React.FC = () => {
                   }
                 >
                   <List.Item.Meta
-                    title={<Typography.Text>{item.title}</Typography.Text>}
+                    title={<Typography.Text className={ item.unread ? '' : 'text-gray-400' }>{item.title}</Typography.Text>}
                   />
                 </List.Item>
               );
@@ -175,7 +184,7 @@ const PostList: React.FC = () => {
         </InfiniteScroll>
       </div>
       <PostDrawer
-        hasMore={hasMore}
+        hasMore={!!pageContinuation?.nextPageurl}
         loadingMore={() => {
           setRefreshKey(refreshKey + 1);
         }}

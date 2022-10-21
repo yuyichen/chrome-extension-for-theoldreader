@@ -3,15 +3,17 @@ import { Drawer } from "antd";
 import { HomeContext } from "../Home";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import services from "@src/services";
+import { FromNow } from "@src/utils";
+import { debounce } from "lodash";
 
 interface Props {
   hasMore: boolean;
   loadingMore: () => void;
 }
 const PostDrawer: React.FC<Props> = (props) => {
-  const { hasMore, loadingMore } = props
+  const { hasMore, loadingMore } = props;
   const {
-    homeState: { feedPosts, selectedPost = {} },
+    homeState: { feedPosts, selectedPost = {}, csrfToken, refreshFeedsKey },
     setHomeState,
   } = useContext(HomeContext);
 
@@ -28,28 +30,41 @@ const PostDrawer: React.FC<Props> = (props) => {
   };
 
   const maskAsRead = async (signal: AbortSignal) => {
-    const { data } = await services.editTag({
+    const { data } = await services.postRead({
+      url: `/posts/${selectedPost.id}/read`,
       method: "post",
-      params: {
-        i: selectedPost.id,
-        a: "user/-/state/com.google/read",
+      data: {
+        _method: "put",
+      },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRF-Token": csrfToken,
       },
       signal,
     });
+    if (data) {
+      const newFeedPosts = feedPosts.concat();
+      newFeedPosts[selectedPostIndex].unread = false;
+      setHomeState({
+        feedPosts: newFeedPosts,
+        refreshFeedsKey: refreshFeedsKey + 1,
+      });
+    }
   };
 
   useEffect(() => {
     if (selectedPost?.id) {
       const ac = new AbortController();
       maskAsRead(ac.signal);
-      return () => {
-        ac.abort();
-      };
+      // return () => {
+      //   ac.abort();
+      // };
     }
   }, [selectedPost?.id]);
 
   useEffect(() => {
-    const keyEvent = (e) => {
+    const keyEvent = debounce((e) => {
       if (feedPosts.length > 0 && selectedPostIndex > -1) {
         switch (true) {
           case e.code === "ArrowRight" &&
@@ -77,15 +92,15 @@ const PostDrawer: React.FC<Props> = (props) => {
             break;
         }
       }
-    };
+    }, 500);
     document.addEventListener("keydown", keyEvent);
 
-    if (hasMore && selectedPostIndex === feedPosts.length - 2 ) {
-      loadingMore()
+    if (hasMore && selectedPostIndex === feedPosts.length - 2) {
+      loadingMore();
     }
 
     return () => document.removeEventListener("keydown", keyEvent);
-  }, [feedPosts, selectedPostIndex]);
+  }, [selectedPostIndex]);
 
   return (
     <Drawer
@@ -112,27 +127,25 @@ const PostDrawer: React.FC<Props> = (props) => {
           )}
         </div>
         <div className="flex-1 overflow-y-auto" id="postBox">
-          <a
-            href={selectedPost.alternate?.[0]?.href}
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a href={selectedPost.origin} target="_blank" rel="noreferrer">
             <h2>{selectedPost.title}</h2>
           </a>
           <div className="text-gray-400 mb-6">
-            <a
-              href={selectedPost.origin?.htmlUrl}
+            {/* <a
+              href={selectedPost.origin}
               target="_blank"
               rel="noreferrer"
             >
-              {selectedPost.origin?.title}
+              {selectedPost?.title}
             </a>
-            <span className="mx-2">/</span>
-            <span>{selectedPost.published}</span>
+            <span className="mx-2">/</span> */}
+            <span>
+              <FromNow time={selectedPost.time} />
+            </span>
           </div>
           <div
             className="post-box"
-            dangerouslySetInnerHTML={{ __html: selectedPost.summary?.content }}
+            dangerouslySetInnerHTML={{ __html: selectedPost?.content }}
           />
         </div>
         <div className="flex items-center pr-4 pl-10">

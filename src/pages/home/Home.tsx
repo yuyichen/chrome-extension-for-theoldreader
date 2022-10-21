@@ -9,16 +9,20 @@ const initialState = {
   homeState: {
     feeds: [],
     feedsLoading: false,
+    refreshFeedsKey: 0,
     selectedFeed: undefined,
     feedPosts: [],
     feedPostsLoading: false,
     selectedPost: undefined,
+    csrfToken: undefined,
   },
   setHomeState: (arg?: any) => undefined,
   getFeeds: (arg?: any) => undefined,
 };
 
 export const HomeContext = createContext(initialState);
+
+let timer: number | null;
 
 const Home = () => {
   const [homeState, setFullHomeState] = useState<typeof initialState.homeState>(
@@ -33,7 +37,7 @@ const Home = () => {
       ...particalState,
     });
   };
-  const getFeeds = async () => {
+  const getFeeds = async (signal: AbortSignal) => {
     setHomeState({
       feedsLoading: true,
     });
@@ -43,6 +47,7 @@ const Home = () => {
           contentType: "application/json",
           "X-Requested-With": "XMLHttpRequest",
         },
+        signal,
       })
       .finally(() => {
         setHomeState({
@@ -55,8 +60,17 @@ const Home = () => {
   };
 
   useEffect(() => {
-    getFeeds();
-  }, []);
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    timer = setTimeout(getFeeds, 500);
+
+    return () => {
+      clearTimeout(timer);
+      timer = null;
+    };
+  }, [homeState.refreshFeedsKey]);
 
   return (
     <ConfigProvider locale={zh_CN}>
@@ -78,7 +92,7 @@ const Home = () => {
             <FeedTree />
           </Layout.Sider>
           <Layout.Content className="flex flex-col">
-            <PostList/>
+            <PostList />
           </Layout.Content>
         </Layout>
       </HomeContext.Provider>
