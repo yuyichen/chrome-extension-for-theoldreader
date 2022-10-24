@@ -14,7 +14,7 @@ const manifest: ManifestType = {
   host_permissions: ['https://theoldreader.com/*'],
   action: {
     // default_popup: 'src/pages/popup/index.html',
-    default_icon: 'icon-34.png',
+    default_icon: 'icon-32.png',
   },
   // chrome_url_overrides: {
   //   newtab: 'src/pages/newtab/index.html',
@@ -25,7 +25,7 @@ const manifest: ManifestType = {
   // devtools_page: 'src/pages/devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['icon-128.png', 'icon-34.png'],
+      resources: ['icon-128.png', 'icon-32.png'],
       matches: [],
     },
   ],

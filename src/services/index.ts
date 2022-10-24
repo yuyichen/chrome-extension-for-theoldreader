@@ -21,13 +21,13 @@ axios.interceptors.response.use(async (response) => {
 const services: Partial<
   Record<
     keyof typeof api,
-    (config: AxiosRequestConfig) => Promise<AxiosResponse>
+    (config?: AxiosRequestConfig) => Promise<AxiosResponse>
   >
 > = {};
 
 for (const key in api) {
   services[key] = (config?: AxiosRequestConfig) =>
-    axios.request({ url: api[key], baseURL: HOST, method: "get", ...config });
+    axios.request({ url: api[key], baseURL: HOST, method: "get", ...(config || {}) });
 }
 
 export default services;
