@@ -48,13 +48,13 @@ const PostDrawer: React.FC<Props> = (props) => {
       newFeedPosts[selectedPostIndex].unread = false;
       setHomeState({
         feedPosts: newFeedPosts,
-        refreshFeedsKey: refreshFeedsKey + 1,
+        // refreshFeedsKey: refreshFeedsKey + 1,
       });
     }
   };
 
   useEffect(() => {
-    if (selectedPost?.id) {
+    if (selectedPost?.id && selectedPost?.unread) {
       const ac = new AbortController();
       maskAsRead(ac.signal);
       // return () => {
@@ -100,7 +100,7 @@ const PostDrawer: React.FC<Props> = (props) => {
     }
 
     return () => document.removeEventListener("keydown", keyEvent);
-  }, [selectedPostIndex]);
+  }, [selectedPost?.id, JSON.stringify(feedPosts)]);
 
   return (
     <Drawer
@@ -109,6 +109,7 @@ const PostDrawer: React.FC<Props> = (props) => {
       onClose={() => {
         setHomeState({
           selectedPost: undefined,
+          refreshFeedsKey: refreshFeedsKey + 1,
         });
       }}
     >

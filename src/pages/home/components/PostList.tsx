@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from "react";
 import { List, Spin, Button, Space, Typography, message, Divider } from "antd";
 import { HomeContext } from "../Home";
 import services from "@src/services";
-import qs from "qs";
 import PostDrawer from "./PostDrawer";
 import InfiniteScroll from "react-infinite-scroll-component";
 import temme from "temme";
@@ -13,11 +12,11 @@ const PostList: React.FC = () => {
     setHomeState,
   } = useContext(HomeContext);
   const [loading, setLoading] = useState(false);
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
   const [refreshKey, setRefreshKey] = useState(1);
   const [pageContinuation, setPageContinuation] = useState(undefined);
 
   const getPosts = async (signal: AbortSignal, c: any) => {
-    const ac = new AbortController();
     const { nextPageUrl, ...rest } = c || {};
     setLoading(true);
     const { data } = await services
@@ -33,7 +32,11 @@ const PostList: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-    const { csrfToken: newCsrfToken, items, nextPage } = temme(
+    const {
+      csrfToken: newCsrfToken,
+      items,
+      nextPage,
+    } = temme(
       data,
       `[name=csrf-token][content=$csrfToken];
       #endless@nextPage|pack {
@@ -58,9 +61,6 @@ const PostList: React.FC = () => {
       csrfToken: newCsrfToken || csrfToken,
     });
     setPageContinuation(nextPage);
-    return () => {
-      ac.abort();
-    };
   };
 
   const refreshPosts = async () => {
@@ -88,16 +88,24 @@ const PostList: React.FC = () => {
   };
 
   const markAsAllRead = async () => {
-    const { data } = await services.markAsRead({
-      method: "post",
-      data: {
-        s: `feed/${selectedFeed?.id}`,
-      },
-    });
+    setIsMarkingAll(true);
+    const { data } = await services
+      .markAsRead({
+        method: "post",
+        data: {
+          s: `feed/${selectedFeed?.id}`,
+        },
+      })
+      .finally(() => {
+        setIsMarkingAll(false);
+      });
     if (data === "OK") {
       message.success("操作成功");
-      setHomeState({
-        refreshFeedsKey: refreshFeedsKey + 1,
+      const ac = new AbortController();
+      getPosts(ac.signal, undefined).then(() => {
+        setHomeState({
+          refreshFeedsKey: refreshFeedsKey + 1,
+        });
       });
     }
   };
@@ -122,7 +130,6 @@ const PostList: React.FC = () => {
     }
   }, [refreshKey]);
 
-
   return (
     <div className="flex-auto flex flex-col container mx-auto overflow-hidden">
       <div className="flex items-center p-2 m-2 bg-white">
@@ -135,7 +142,11 @@ const PostList: React.FC = () => {
           >
             刷新
           </Button>
-          <Button disabled={!selectedFeed} onClick={markAsAllRead}>
+          <Button
+            disabled={!selectedFeed}
+            onClick={markAsAllRead}
+            loading={isMarkingAll}
+          >
             全部标为已读
           </Button>
         </Space>

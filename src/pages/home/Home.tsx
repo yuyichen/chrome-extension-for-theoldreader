@@ -22,7 +22,8 @@ const initialState = {
 
 export const HomeContext = createContext(initialState);
 
-let timer: number | null;
+let timer: number;
+let autoRefreshTimer: number;
 
 const Home = () => {
   const [homeState, setFullHomeState] = useState<typeof initialState.homeState>(
@@ -32,11 +33,12 @@ const Home = () => {
   const setHomeState = (
     particalState: Partial<typeof initialState.homeState>
   ) => {
-    setFullHomeState({
-      ...(homeState as typeof initialState.homeState),
+    setFullHomeState(preState => ({
+      ...preState,
       ...particalState,
-    });
+    }));
   };
+
   const getFeeds = async (signal: AbortSignal) => {
     setHomeState({
       feedsLoading: true,
@@ -60,17 +62,16 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
     timer = setTimeout(getFeeds, 500);
+    autoRefreshTimer = setInterval(getFeeds, 1000 * 60 * 3);
 
     return () => {
       clearTimeout(timer);
+      clearInterval(autoRefreshTimer);
       timer = null;
     };
   }, [homeState.refreshFeedsKey]);
+
 
   return (
     <ConfigProvider locale={zh_CN}>

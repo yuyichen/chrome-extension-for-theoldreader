@@ -7,7 +7,7 @@ import "../index.less";
 
 const FeedTree = () => {
   const {
-    homeState: { feeds = [], feedsLoading },
+    homeState: { feeds, feedsLoading, selectedFeed },
     setHomeState,
   } = useContext(HomeContext);
 
@@ -63,6 +63,7 @@ const FeedTree = () => {
           className="feeds-tree m-2"
           onSelect={selectFeed}
           style={{ paddingBottom: 50 }}
+          defaultExpandAll
         >
           {renderTreeNode(feeds)}
         </Tree>
