@@ -1,0 +1,29 @@
+name: Publish Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v
+    
+    - name: 🏗 Setup nodejs
+      uses: actions/setup-node@v1
+      with:
+        node-version: 16.x
+
+    - name: 🫓 Install dependency
+      run: npm install
+
+    - name: 📦 Build
+      run: npm run build
+      
+    - name: Create a Release
+      uses: fnkr/github-action-ghr@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GHR_COMPRESS: zip
+        GHR_PATH: dist/
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
