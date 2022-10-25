@@ -48,6 +48,8 @@ const Home = () => {
     }));
   };
 
+  const [collapsed, setCollapsed] = useState(false);
+
   const getFeeds = async (signal: AbortSignal) => {
     setHomeState({
       feedsLoading: true,
@@ -123,8 +125,11 @@ const Home = () => {
             title="RSS"
             className="overflow-auto"
             collapsible
+            collapsed={collapsed}
+            onCollapse={setCollapsed}
+            collapsedWidth={60}
           >
-            <FeedTree />
+            {!collapsed && <FeedTree />}
           </Layout.Sider>
           <Layout.Content className="flex flex-col">
             <Layout.Header>
