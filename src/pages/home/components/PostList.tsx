@@ -5,6 +5,7 @@ import services from "@src/services";
 import PostDrawer from "./PostDrawer";
 import InfiniteScroll from "react-infinite-scroll-component";
 import temme from "temme";
+import intl from "react-intl-universal";
 
 const PostList: React.FC = () => {
   const {
@@ -100,7 +101,7 @@ const PostList: React.FC = () => {
         setIsMarkingAll(false);
       });
     if (data === "OK") {
-      message.success("操作成功");
+      message.success(intl.get("actionSuccess"));
       const ac = new AbortController();
       getPosts(ac.signal, undefined).then(() => {
         setHomeState({
@@ -140,14 +141,14 @@ const PostList: React.FC = () => {
             disabled={!selectedFeed}
             onClick={refreshPosts}
           >
-            刷新
+            {intl.get("refresh")}
           </Button>
           <Button
             disabled={!selectedFeed}
             onClick={markAsAllRead}
             loading={isMarkingAll}
           >
-            全部标为已读
+            {intl.get("markAllAsRead")}
           </Button>
         </Space>
       </div>
@@ -167,7 +168,7 @@ const PostList: React.FC = () => {
           }
           endMessage={
             <Divider plain className="p-2">
-              没有更多了
+              {intl.get("noMoreData")}
             </Divider>
           }
           scrollableTarget="scrollableDiv"

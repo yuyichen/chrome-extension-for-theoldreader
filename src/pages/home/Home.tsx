@@ -1,12 +1,24 @@
 import React, { useEffect, useState, createContext } from "react";
-import { ConfigProvider, Layout } from "antd";
-import zh_CN from "antd/es/locale/zh_CN";
+import { ConfigProvider, Layout, Dropdown, Menu } from "antd";
+import antd_zh_CN from "antd/es/locale/zh_CN";
+import antd_en_US from "antd/es/locale/en_US";
 import services from "../../services";
 import FeedTree from "./components/FeedTree";
 import PostList from "./components/PostList";
+import intl from "react-intl-universal";
+import * as enUS from "../../locales/en-US.json";
+import * as zhCN from "../../locales/zh-CN.json";
+import { GlobalOutlined } from "@ant-design/icons";
+
+// locale data
+const locales = {
+  en_US: enUS,
+  zh_CN: zhCN,
+};
 
 const initialState = {
   homeState: {
+    currentLang: "",
     feeds: [],
     feedsLoading: false,
     refreshFeedsKey: 0,
@@ -22,9 +34,6 @@ const initialState = {
 
 export const HomeContext = createContext(initialState);
 
-let timer: number;
-let autoRefreshTimer: number;
-
 const Home = () => {
   const [homeState, setFullHomeState] = useState<typeof initialState.homeState>(
     initialState.homeState
@@ -33,7 +42,7 @@ const Home = () => {
   const setHomeState = (
     particalState: Partial<typeof initialState.homeState>
   ) => {
-    setFullHomeState(preState => ({
+    setFullHomeState((preState) => ({
       ...preState,
       ...particalState,
     }));
@@ -61,20 +70,45 @@ const Home = () => {
     }
   };
 
+  const loadLocal = (lang?: string) => {
+    const newLang = lang || localStorage.getItem("lang") || "zh_CN";
+    localStorage.setItem("lang", newLang);
+
+    intl
+      .init({
+        currentLocale: newLang,
+        locales,
+      })
+      .then(() => {
+        setHomeState({
+          currentLang: newLang,
+        });
+      });
+  };
+
   useEffect(() => {
-    timer = setTimeout(getFeeds, 500);
-    autoRefreshTimer = setInterval(getFeeds, 1000 * 60 * 3);
+    const timer = setTimeout(getFeeds, 500);
+    const autoRefreshTimer = setInterval(getFeeds, 1000 * 60 * 3);
 
     return () => {
       clearTimeout(timer);
       clearInterval(autoRefreshTimer);
-      timer = null;
     };
   }, [homeState.refreshFeedsKey]);
 
+  useEffect(() => {
+    loadLocal();
+  }, []);
 
   return (
-    <ConfigProvider locale={zh_CN}>
+    <ConfigProvider
+      locale={
+        {
+          zh_CN: antd_zh_CN,
+          en_US: antd_en_US,
+        }[homeState.currentLang]
+      }
+    >
       <HomeContext.Provider
         value={{
           homeState,
@@ -93,6 +127,25 @@ const Home = () => {
             <FeedTree />
           </Layout.Sider>
           <Layout.Content className="flex flex-col">
+            <Layout.Header>
+              <Dropdown
+                overlay={
+                  <Menu>
+                    <Menu.Item onClick={() => loadLocal("zh_CN")}>
+                      中文
+                    </Menu.Item>
+                    <Menu.Item onClick={() => loadLocal("en_US")}>
+                      English
+                    </Menu.Item>
+                  </Menu>
+                }
+              >
+                <a className="float-right">
+                  <GlobalOutlined className="mr-2" />
+                  {intl.get("currentLanguage")}
+                </a>
+              </Dropdown>
+            </Layout.Header>
             <PostList />
           </Layout.Content>
         </Layout>

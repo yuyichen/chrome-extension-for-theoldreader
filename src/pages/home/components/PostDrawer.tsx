@@ -3,7 +3,7 @@ import { Drawer } from "antd";
 import { HomeContext } from "../Home";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import services from "@src/services";
-import { FromNow } from "@src/utils";
+import FromNow from "./FromNow";
 import { debounce } from "lodash";
 
 interface Props {

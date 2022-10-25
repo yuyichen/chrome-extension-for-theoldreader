@@ -4,6 +4,7 @@ import { HomeContext } from "../Home";
 import { SITE_FAVICON_HOST } from "@src/constants";
 import { FolderFilled } from "@ant-design/icons";
 import "../index.less";
+import intl from "react-intl-universal";
 
 const FeedTree = () => {
   const {
@@ -40,7 +41,7 @@ const FeedTree = () => {
             <span className="flex overflow-hidden">
               <Tooltip title={x.title}>
                 <span className="flex-auto truncate">
-                  {x.title || "未命名"}
+                  {x.title || intl.get("untitled")}
                 </span>
               </Tooltip>
               {x.unread_count > 0 && <Badge count={x.unread_count} />}
