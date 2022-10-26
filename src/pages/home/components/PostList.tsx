@@ -1,11 +1,22 @@
 import { useState, useEffect, useContext } from "react";
-import { List, Spin, Button, Space, Typography, message, Divider } from "antd";
+import {
+  List,
+  Spin,
+  Button,
+  Space,
+  Typography,
+  message,
+  Divider,
+  Dropdown,
+  Menu,
+} from "antd";
 import { HomeContext } from "../Home";
 import services from "@src/services";
 import PostDrawer from "./PostDrawer";
 import InfiniteScroll from "react-infinite-scroll-component";
 import temme from "temme";
 import intl from "react-intl-universal";
+import useMarkPost from "./useMarkPost";
 
 const PostList: React.FC = () => {
   const {
@@ -16,6 +27,7 @@ const PostList: React.FC = () => {
   const [isMarkingAll, setIsMarkingAll] = useState(false);
   const [refreshKey, setRefreshKey] = useState(1);
   const [pageContinuation, setPageContinuation] = useState(undefined);
+  const maskAsRead = useMarkPost();
 
   const getPosts = async (signal: AbortSignal, c: any) => {
     const { nextPageUrl, ...rest } = c || {};
@@ -90,6 +102,11 @@ const PostList: React.FC = () => {
 
   const markAsAllRead = async () => {
     setIsMarkingAll(true);
+    document.querySelectorAll("#scrollableDiv")[0].scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
     const { data } = await services
       .markAsRead({
         method: "post",
@@ -174,12 +191,12 @@ const PostList: React.FC = () => {
           scrollableTarget="scrollableDiv"
         >
           <List
-            className="m-2 p-2 bg-white"
+            className="m-2 mt-0 p-2 bg-white"
             dataSource={feedPosts}
-            loading={loading}
+            loading={loading && feedPosts.length === 0}
             itemLayout="horizontal"
             renderItem={(item, index) => {
-              return (
+              const listItemEl = (
                 <List.Item
                   className="group cursor-pointer px-4"
                   onClick={() =>
@@ -198,6 +215,22 @@ const PostList: React.FC = () => {
                     }
                   />
                 </List.Item>
+              );
+              return item.unread ? (
+                <Dropdown
+                  trigger={["contextMenu"]}
+                  overlay={
+                    <Menu>
+                      <Menu.Item onClick={() => maskAsRead(item)}>
+                        {intl.get("markPost")}
+                      </Menu.Item>
+                    </Menu>
+                  }
+                >
+                  {listItemEl}
+                </Dropdown>
+              ) : (
+                listItemEl
               );
             }}
           />

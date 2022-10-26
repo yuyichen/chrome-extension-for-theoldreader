@@ -3,6 +3,7 @@
   "changeLanguage": "change language",
   "currentLanguage": "English",
   "refresh": "refresh",
+  "markPost": "mark as read",
   "markAllAsRead": "mark all as read",
   "noMoreData": "no more data",
   "actionSuccess": "success"

@@ -2,9 +2,9 @@ import React, { useContext, useEffect } from "react";
 import { Drawer, BackTop } from "antd";
 import { HomeContext } from "../Home";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
-import services from "@src/services";
 import FromNow from "./FromNow";
 import { debounce } from "lodash";
+import useMarkPost from "./useMarkPost";
 
 interface Props {
   hasMore: boolean;
@@ -16,6 +16,8 @@ const PostDrawer: React.FC<Props> = (props) => {
     homeState: { feedPosts, selectedPost = {}, csrfToken, refreshFeedsKey },
     setHomeState,
   } = useContext(HomeContext);
+
+  const maskAsRead = useMarkPost();
 
   const selectedPostIndex = feedPosts.findIndex(
     (x) => x.id === selectedPost.id
@@ -29,37 +31,9 @@ const PostDrawer: React.FC<Props> = (props) => {
     });
   };
 
-  const maskAsRead = async (signal: AbortSignal) => {
-    const { data } = await services.postRead({
-      url: `/posts/${selectedPost.id}/read`,
-      method: "post",
-      data: {
-        _method: "put",
-      },
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-        "X-CSRF-Token": csrfToken,
-      },
-      signal,
-    });
-    if (data) {
-      const newFeedPosts = feedPosts.concat();
-      newFeedPosts[selectedPostIndex].unread = false;
-      setHomeState({
-        feedPosts: newFeedPosts,
-        // refreshFeedsKey: refreshFeedsKey + 1,
-      });
-    }
-  };
-
   useEffect(() => {
     if (selectedPost?.id && selectedPost?.unread) {
-      const ac = new AbortController();
-      maskAsRead(ac.signal);
-      // return () => {
-      //   ac.abort();
-      // };
+      maskAsRead(selectedPost);
     }
   }, [selectedPost?.id]);
 
@@ -146,9 +120,14 @@ const PostDrawer: React.FC<Props> = (props) => {
           </div>
           <div
             className="post-box"
-            dangerouslySetInnerHTML={{ __html: selectedPost?.content?.replace(/href/g, "target='_blank' href") }}
+            dangerouslySetInnerHTML={{
+              __html: selectedPost?.content?.replace(
+                /href/g,
+                "target='_blank' href"
+              ),
+            }}
           />
-          <BackTop target={() => document.querySelector('#postBox')}/>
+          <BackTop target={() => document.querySelector("#postBox")} />
         </div>
         <div className="flex items-center pr-4 pl-10">
           {selectedPostIndex < feedPosts.length - 1 && (
