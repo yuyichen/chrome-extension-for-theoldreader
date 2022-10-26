@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from "react";
-import { Drawer } from "antd";
+import { Drawer, BackTop } from "antd";
 import { HomeContext } from "../Home";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import services from "@src/services";
@@ -148,6 +148,7 @@ const PostDrawer: React.FC<Props> = (props) => {
             className="post-box"
             dangerouslySetInnerHTML={{ __html: selectedPost?.content?.replace(/href/g, "target='_blank' href") }}
           />
+          <BackTop target={() => document.querySelector('#postBox')}/>
         </div>
         <div className="flex items-center pr-4 pl-10">
           {selectedPostIndex < feedPosts.length - 1 && (

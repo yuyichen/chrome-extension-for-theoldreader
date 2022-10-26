@@ -30,4 +30,4 @@ const getUnreadCount = async () => {
 };
 
 getUnreadCount();
-setInterval(getUnreadCount, 15000);
+setInterval(getUnreadCount, 60000);
