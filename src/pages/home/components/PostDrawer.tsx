@@ -146,7 +146,7 @@ const PostDrawer: React.FC<Props> = (props) => {
           </div>
           <div
             className="post-box"
-            dangerouslySetInnerHTML={{ __html: selectedPost?.content }}
+            dangerouslySetInnerHTML={{ __html: selectedPost?.content?.replace(/href/g, "target='_blank' href") }}
           />
         </div>
         <div className="flex items-center pr-4 pl-10">
