@@ -2,7 +2,6 @@ chrome.action.onClicked.addListener(async () => {
   const tab = await chrome.tabs.query({
     title: "chrome-extension-for-theoldreader",
   });
-  console.log(tab)
   if (Array.isArray(tab) && tab.length > 0) {
     await chrome.tabs.update(tab[0].id, { active: true });
   } else {
@@ -25,5 +24,14 @@ const getUnreadCount = async () => {
   });
 };
 
-getUnreadCount();
-setInterval(getUnreadCount, 60000);
+chrome.alarms.create("getUnreadCount", {
+  periodInMinutes: 1,
+  delayInMinutes: 0,
+});
+chrome.alarms.onAlarm.addListener((alarm) => {
+  switch (alarm.name) {
+    case "getUnreadCount":
+      getUnreadCount();
+      break;
+  }
+});

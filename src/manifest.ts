@@ -11,7 +11,7 @@ const manifest: ManifestType = {
     service_worker: "src/pages/background/index.js",
     type: "module",
   },
-  permissions: ["tabs"],
+  permissions: ["tabs", "alarms"],
   host_permissions: ["https://theoldreader.com/*"],
   action: {
     // default_popup: 'src/pages/popup/index.html',
