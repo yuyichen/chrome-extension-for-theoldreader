@@ -1,5 +1,5 @@
-import pkg from '../package.json';
-import { ManifestType } from '@src/manifest-type';
+import pkg from "../package.json";
+import { ManifestType } from "@src/manifest-type";
 
 const manifest: ManifestType = {
   manifest_version: 3,
@@ -8,24 +8,25 @@ const manifest: ManifestType = {
   description: pkg.description,
   // options_page: 'src/pages/options/index.html',
   background: {
-    service_worker: 'src/pages/background/index.js',
-    type: 'module',
+    service_worker: "src/pages/background/index.js",
+    type: "module",
   },
-  host_permissions: ['https://theoldreader.com/*'],
+  permissions: ["tabs"],
+  host_permissions: ["https://theoldreader.com/*"],
   action: {
     // default_popup: 'src/pages/popup/index.html',
-    default_icon: 'icon-32.png',
+    default_icon: "icon-32.png",
   },
   // chrome_url_overrides: {
   //   newtab: 'src/pages/newtab/index.html',
   // },
   icons: {
-    "128": 'icon-128.png',
+    "128": "icon-128.png",
   },
   // devtools_page: 'src/pages/devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['icon-128.png', 'icon-32.png'],
+      resources: ["icon-128.png", "icon-32.png"],
       matches: [],
     },
   ],

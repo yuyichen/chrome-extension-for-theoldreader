@@ -1,16 +1,12 @@
-let tab;
-
 chrome.action.onClicked.addListener(async () => {
-  if (tab) {
-    tab = await chrome.tabs.update(tab.id, { active: true });
+  const tab = await chrome.tabs.query({
+    title: "chrome-extension-for-theoldreader",
+  });
+  console.log(tab)
+  if (Array.isArray(tab) && tab.length > 0) {
+    await chrome.tabs.update(tab[0].id, { active: true });
   } else {
-    tab = await chrome.tabs.create({ url: "src/pages/home/index.html" });
-  }
-});
-
-chrome.tabs.onRemoved.addListener((tabId, info) => {
-  if (tabId === tab.id) {
-    tab = undefined;
+    await chrome.tabs.create({ url: "src/pages/home/index.html" });
   }
 });
 
