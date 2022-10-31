@@ -1,10 +1,11 @@
-import React, { useContext, useEffect } from "react";
-import { Drawer, BackTop } from "antd";
+import React, { useContext, useEffect, useState } from "react";
+import { Drawer, BackTop, Popover } from "antd";
 import { HomeContext } from "../Home";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { LeftOutlined, RightOutlined, QrcodeOutlined } from "@ant-design/icons";
 import FromNow from "./FromNow";
 import { debounce } from "lodash";
 import useMarkPost from "./useMarkPost";
+import qrcode from "qrcode";
 
 interface Props {
   hasMore: boolean;
@@ -16,6 +17,7 @@ const PostDrawer: React.FC<Props> = (props) => {
     homeState: { feedPosts, selectedPost = {}, csrfToken, refreshFeedsKey },
     setHomeState,
   } = useContext(HomeContext);
+  const [qrcodeUrl, setQrcodeUrl] = useState();
 
   const maskAsRead = useMarkPost();
 
@@ -36,6 +38,14 @@ const PostDrawer: React.FC<Props> = (props) => {
       maskAsRead(selectedPost);
     }
   }, [selectedPost?.id]);
+
+  useEffect(() => {
+    if (selectedPost?.origin) {
+      qrcode.toDataURL(selectedPost.origin).then((res) => {
+        setQrcodeUrl(res);
+      });
+    }
+  }, [selectedPost?.origin]);
 
   useEffect(() => {
     const keyEvent = debounce((e) => {
@@ -80,6 +90,13 @@ const PostDrawer: React.FC<Props> = (props) => {
     <Drawer
       width={"80vw"}
       open={feedPosts.length > 0 && selectedPostIndex > -1}
+      title={
+        <div className="clearfix">
+          <Popover content={<img src={qrcodeUrl} />} placement="bottomRight">
+            <QrcodeOutlined className="float-right cursor-pointer" />
+          </Popover>
+        </div>
+      }
       onClose={() => {
         setHomeState({
           selectedPost: undefined,
