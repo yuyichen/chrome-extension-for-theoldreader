@@ -138,10 +138,9 @@ const PostDrawer: React.FC<Props> = (props) => {
           <div
             className="post-box"
             dangerouslySetInnerHTML={{
-              __html: selectedPost?.content?.replace(
-                /href/g,
-                "target='_blank' href"
-              ),
+              __html: selectedPost?.content
+                ?.replace(/href/g, "target='_blank' href")
+                .replace(/src="\/\//g, 'src="https://'),
             }}
           />
           <BackTop target={() => document.querySelector("#postBox")} />
