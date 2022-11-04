@@ -128,6 +128,10 @@ const PostList: React.FC = () => {
     }
   };
 
+  const openInNewTab = (item) => {
+    chrome.tabs.create({ url: item.origin }).then(() => maskAsRead(item));
+  };
+
   useEffect(() => {
     if (selectedFeed?.id) {
       const ac = new AbortController();
@@ -216,21 +220,24 @@ const PostList: React.FC = () => {
                   />
                 </List.Item>
               );
-              return item.unread ? (
+              return (
                 <Dropdown
                   trigger={["contextMenu"]}
                   overlay={
                     <Menu>
-                      <Menu.Item onClick={() => maskAsRead(item)}>
-                        {intl.get("markPost")}
+                      <Menu.Item onClick={() => openInNewTab(item)}>
+                        {intl.get("openInNewTab")}
                       </Menu.Item>
+                      {item.unread && (
+                        <Menu.Item onClick={() => maskAsRead(item)}>
+                          {intl.get("markPost")}
+                        </Menu.Item>
+                      )}
                     </Menu>
                   }
                 >
                   {listItemEl}
                 </Dropdown>
-              ) : (
-                listItemEl
               );
             }}
           />

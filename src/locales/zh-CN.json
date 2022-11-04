@@ -6,5 +6,6 @@
   "markPost": "标为已读",
   "markAllAsRead": "全部标为已读",
   "noMoreData": "没有更多了",
-  "actionSuccess": "操作成功"
+  "actionSuccess": "操作成功",
+  "openInNewTab": "在新标签页打开"
 }

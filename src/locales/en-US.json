@@ -6,5 +6,6 @@
   "markPost": "mark as read",
   "markAllAsRead": "mark all as read",
   "noMoreData": "no more data",
-  "actionSuccess": "success"
+  "actionSuccess": "success",
+  "openInNewTab": "open in new tab"
 }
